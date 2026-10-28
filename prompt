@@ -1,0 +1,24 @@
+Atue como um Engenheiro de Software Sênior especialista em Python e manipulação de arquivos. Preciso que você crie o código de uma aplicação local chamada "managerpdf", inspirada no ilovepdf.com.
+
+A aplicação deve rodar inteiramente em containers Docker, garantindo isolamento e facilidade de deploy. Todas as instalações de dependências e configurações devem ser feitas dentro do container.
+
+A aplicação deve ser escrita inteiramente em Python utilizando Streamlit para a interface web e as bibliotecas PyMuPDF (fitz) ou pypdf para o motor de processamento.
+
+Requisitos da Interface (Streamlit):
+1. Uma barra lateral ou menu superior para escolher a ferramenta de manipulação.
+2. Design limpo e moderno usando componentes nativos do Streamlit.
+
+Funcionalidades Iniciais Necessárias:
+1. Juntar PDFs (Merge): O usuário faz upload de múltiplos arquivos PDF, pode ordenar/reorganizar os arquivos se possível, e baixa um único PDF combinado.
+2. Dividir PDF (Split): O usuário faz upload de um PDF e escolhe um intervalo de páginas (ex: 1-3, 4-5) para extrair em novos arquivos.
+3. Rotacionar PDF: O usuário faz upload de um PDF, escolhe o ângulo (90, 180, 270 graus) e aplica a rotação a todas as páginas ou páginas selecionadas.
+4. Comprimir PDF: 
+
+Funcionalidade para mais tarde (apenas planejamento agora)
+5. Converter PDF para Imagem (JPG/PNG): O usuário envia um PDF e a aplicação gera um arquivo ZIP contendo as páginas convertidas em imagens.
+6. Servico de OCR. 
+
+Regras de Código:
+- Escreva um código limpo, modular, bem documentado e dividida em módulos simples de fácil entendimento.
+- Trate erros comuns (como upload de arquivos corrompidos ou senhas).
+- Certifique-se de que os arquivos temporários criados durante o processo sejam limpos após o download do usuário para não lotar o container Docker.

@@ -1,0 +1,9 @@
+# Dependências do managerpdf — instaladas somente dentro da imagem Docker.
+# Interface web
+streamlit>=1.39,<1.45
+
+# Motor de processamento de PDF (merge, split, rotate, compress)
+pymupdf>=1.24.9,<1.26
+
+# Recompressão das imagens embutidas nos PDFs
+pillow>=10.4,<12

@@ -1,0 +1,57 @@
+# Execução local:  docker compose up --build
+# Acesso:          http://localhost:8501
+services:
+  managerpdf:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: managerpdf:local
+    container_name: managerpdf
+    ports:
+      - "8501:8501"
+    environment:
+      TZ: America/Sao_Paulo
+    read_only: false
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      # Área temporária em memória: nada é persistido no disco do host.
+      - /tmp:size=256m,mode=1777
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8501/_stcore/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 20s
+      retries: 3
+
+  # -------------------------------------------------------------------------
+  # Modo desenvolvimento (hot reload) — opcional:
+  #   docker compose --profile dev up --build
+  # Monta o código do host, mas as dependências continuam dentro do container.
+  # -------------------------------------------------------------------------
+  managerpdf-dev:
+    profiles: ["dev"]
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: managerpdf:local
+    container_name: managerpdf-dev
+    ports:
+      - "8502:8501"
+    environment:
+      TZ: America/Sao_Paulo
+    command:
+      - streamlit
+      - run
+      - app.py
+      - --server.port=8501
+      - --server.address=0.0.0.0
+      - --server.runOnSave=true
+    volumes:
+      - ./app.py:/app/app.py:ro
+      - ./src:/app/src:ro
+      - ./ui:/app/ui:ro
+      - ./.streamlit:/app/.streamlit:ro
+    tmpfs:
+      - /tmp:size=256m,mode=1777

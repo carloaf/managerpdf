@@ -1,0 +1,16 @@
+.git
+.gitignore
+.venv
+__pycache__
+**/__pycache__
+*.py[cod]
+*.ipynb
+.pytest_cache
+.mypy_cache
+.ruff_cache
+README.md
+Makefile
+prompt
+Dockerfile
+compose.yaml
+*.log
