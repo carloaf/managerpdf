@@ -1,0 +1,7 @@
+# Dependências do serviço de OCR (container separado do managerpdf).
+# Indra OCR: modelo de IA em ONNX Runtime, sem GPU, sem PyTorch.
+indra-ocr>=1.1,<2
+
+# API HTTP que expõe o OCR para o container principal.
+fastapi>=0.111,<1
+uvicorn[standard]>=0.30,<1

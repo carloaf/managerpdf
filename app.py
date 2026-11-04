@@ -16,6 +16,7 @@ from ui import (
     home,
     image_page,
     merge_page,
+    ocr_page,
     roadmap_page,
     rotate_page,
     split_page,
@@ -42,6 +43,7 @@ pages = {
         st.Page(rotate_page.render, title="Rotacionar PDF", icon="🔄", url_path="rotacionar"),
         st.Page(compress_page.render, title="Comprimir PDF", icon="🗜️", url_path="comprimir"),
         st.Page(image_page.render, title="PDF para imagem", icon="🖼️", url_path="imagens"),
+        st.Page(ocr_page.render, title="OCR (IA)", icon="🔍", url_path="ocr"),
     ],
     "Em breve": [
         st.Page(roadmap_page.render, title="Roadmap", icon="🗺️", url_path="roadmap"),

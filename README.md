@@ -15,7 +15,7 @@ dependências e configurações vivem dentro do container.
 | 🔄 Rotacionar PDF | ✅ | 90° / 180° / 270°, todas as páginas ou seleção, pré-visualização |
 | 🗜️ Comprimir PDF | ✅ | Recompressão de imagens (qualidade + DPI + escala de cinza) e limpeza estrutural |
 | 🖼️ PDF → imagem | ✅ | JPG/PNG com DPI ajustável, páginas selecionáveis e resultado em ZIP |
-| 🔍 OCR | 🔜 | Planejado (PDF pesquisável) |
+| 🔍 OCR (IA) | ✅ | PDF pesquisável via Indra OCR (ONNX Runtime) em container separado |
 
 Extras já implementados: detecção automática de **PDFs protegidos por senha**,
 validação de arquivos corrompidos, **processamento 100% em memória**,
@@ -32,6 +32,63 @@ docker compose up --build
 ```
 
 Acesse **http://localhost:8501**.
+
+O comando sobe dois containers: `managerpdf` (interface Streamlit) e `ocr`
+(serviço Indra OCR). O build do `ocr` baixa os modelos de IA (~76 MB), então o
+runtime não depende de rede.
+
+## Deploy no servidor (VM em outro PC)
+
+Requisitos na VM: Linux x86_64, **Docker com Compose v2** e acesso SSH. Os
+valores abaixo são para a VM de referência (**4 GB de RAM / 6 vCPU**).
+
+```bash
+# 1. Na VM: clonar o repositório
+git clone <repo> managerpdf && cd managerpdf
+
+# 2. Construir e subir em background
+docker compose up -d --build
+
+# 3. Conferir a saúde dos dois containers (devem ficar "healthy")
+docker compose ps
+```
+
+Acesse de qualquer PC da rede: **http://IP_DA_VM:8501** (a interface escuta em
+`0.0.0.0:8501`). Se a porta não responder, libere o firewall da VM:
+
+```bash
+sudo ufw allow 8501/tcp   # ou: sudo firewall-cmd --add-port=8501/tcp --permanent
+```
+
+**Dimensionamento para 4 GB / 6 vCPU** (já aplicado no [compose.yaml](./compose.yaml)):
+
+| Container | Limite | Observação |
+|---|---|---|
+| `ocr` | `mem_limit: 1g`, `cpus: 2.0`, 2 threads | pico medido ≈ 650 MB com 2 threads |
+| `managerpdf` | sem limite fixo | ≈ 300 MB ocioso; pico ~1 GB ao processar upload de 200 MB |
+
+- **Total em regime ≈ 1,3 GB; pico ≈ 2,2 GB** → cabe nos 4 GB com folga.
+- O OCR é CPU-bound e roda bem com 2 threads; **não** aumente para 6 threads —
+  cada thread extra acrescenta ~150 MB de RAM sem ganho proporcional na VM.
+- Em CPUs **sem AVX2** (máquinas antigas), o ONNX Runtime usa um caminho lento:
+  o OCR pode levar vários segundos por página. Em CPU moderna (a VM de 6 vCPU)
+  o esperado é ~210–400 ms/página.
+
+### Atualizar a aplicação na VM
+
+```bash
+cd managerpdf
+git pull
+docker compose up -d --build   # reconstrói e recria o que mudou
+```
+
+### Comandos úteis
+
+```bash
+docker compose logs -f managerpdf ocr   # acompanha os dois serviços
+docker compose ps                       # status + health
+curl -fsS http://localhost:8000/health  # saúde do serviço OCR (dentro da VM)
+```
 
 ### Atalhos com Make
 
@@ -67,6 +124,7 @@ managerpdf/
 │   ├── rotate_page.py      # rotacionar PDF (com prévia)
 │   ├── compress_page.py    # comprimir PDF (com relatório)
 │   ├── image_page.py       # PDF → imagem (JPG/PNG em ZIP)
+│   ├── ocr_page.py         # OCR (PDF pesquisável)
 │   └── roadmap_page.py     # funcionalidades planejadas
 ├── src/                    # núcleo de processamento (sem Streamlit)
 │   ├── pdf_utils.py        # validação, senha, intervalos de páginas
@@ -75,9 +133,15 @@ managerpdf/
 │   ├── rotate.py           # rotate_pdf()
 │   ├── compress.py         # compress_pdf() + CompressionReport
 │   ├── to_image.py         # iter_page_images() (PNG/JPG)
+│   ├── ocr.py              # cliente do serviço OCR + PDF pesquisável
 │   ├── archive.py          # ZIP em memória
 │   ├── preview.py          # renderização de páginas em PNG
 │   └── storage.py          # workspace temporário + limpeza de /tmp
+├── services/               # serviços auxiliares em containers próprios
+│   └── ocr/                # serviço OCR isolado (Indra OCR + FastAPI)
+│       ├── Dockerfile
+│       ├── app.py
+│       └── requirements.txt
 ├── Dockerfile
 ├── compose.yaml
 ├── requirements.txt
@@ -113,6 +177,14 @@ memória.
 **Erros:** toda mensagem é escrita em português e pronta para o usuário final
 (`PDFProcessingError`), com uma barreira final em `components.run_safely()`.
 
+**OCR:** o reconhecimento usa o [Indra OCR](https://github.com/datalab-to/indra)
+(IA em ONNX Runtime, ~76 MB, sem GPU) em um container separado (`ocr`), exposto
+via HTTP. O `managerpdf` envia o PDF ao serviço local, recebe as linhas com
+suas coordenadas e sobrepõe uma camada de texto invisível com PyMuPDF, gerando
+um PDF pesquisável sem alterar a aparência. Páginas que já possuem camada de
+texto são mantidas como estão. O serviço usa 2 threads (pico ~650 MB de RAM) e
+tem `mem_limit` de 1 GB no compose.
+
 ## Comportamento da compressão
 
 1. Cada imagem é reescalada para a resolução escolhida (DPI) e recodificada em
@@ -126,9 +198,9 @@ memória.
 
 ## Próximos passos
 
-- [ ] OCR com Tesseract na imagem Docker
 - [ ] Testes automatizados do núcleo (`pytest`)
 - [ ] Marca d'água, numeração de páginas e proteção por senha
+- [ ] OCR: posicionamento exato do texto em páginas rotacionadas/verticais
 
 ## Licença
 

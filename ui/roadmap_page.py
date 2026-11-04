@@ -8,10 +8,20 @@ from ui import theme
 
 _PLANNED = [
     (
-        "🔍",
-        "OCR (reconhecimento de texto)",
-        "Aplicar OCR em PDFs digitalizados para gerar documentos "
-        "pesquisáveis, mantendo a imagem original como fundo.",
+        "💧",
+        "Marca d'água",
+        "Adicionar marcas de texto ou imagem às páginas, com controle "
+        "de opacidade e posição.",
+    ),
+    (
+        "🔢",
+        "Numeração de páginas",
+        "Inserir números de página em posições e formatos configuráveis.",
+    ),
+    (
+        "🔐",
+        "Proteção por senha",
+        "Aplicar senha de abertura (e permissões) ao PDF.",
     ),
 ]
 
@@ -30,11 +40,12 @@ def render() -> None:
 
     with st.container(border=True):
         st.markdown(
-            "**OCR**\n"
-            "- Extração de texto nativo primeiro (`page.get_text`) e OCR apenas "
-            "quando a página não tiver camada de texto.\n"
-            "- Motor sugerido: Tesseract (`pytesseract`) ou `ocrmypdf` na imagem Docker.\n"
-            "- Resultado em PDF pesquisável com camada de texto invisível."
+            "**OCR (implementado ✅)**\n"
+            "- Motor: Indra OCR (IA, ONNX Runtime, CPU) em um container Docker "
+            "separado (`services/ocr/`).\n"
+            "- Páginas com camada de texto são preservadas; as digitalizadas "
+            "recebem OCR e uma camada de texto invisível.\n"
+            "- `src/ocr.py`: cliente HTTP + reconstrução do PDF pesquisável."
         )
 
     with st.container(border=True):

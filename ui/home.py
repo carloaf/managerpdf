@@ -12,10 +12,13 @@ _TOOLS = [
     ("🔄", "Rotacionar PDF", "Gire todas as páginas ou apenas as selecionadas em 90°, 180° ou 270°.", "/rotacionar"),
     ("🗜️", "Comprimir PDF", "Reduza o tamanho recompactando imagens e a estrutura do arquivo.", "/comprimir"),
     ("🖼️", "PDF para imagem", "Exporte cada página como JPG/PNG e receba tudo em um ZIP.", "/imagens"),
+    ("🔍", "OCR (IA)", "Gere um PDF pesquisável a partir de documentos digitalizados com o Indra OCR.", "/ocr"),
 ]
 
 _SOON = [
-    ("🔍", "OCR", "Extraia texto de documentos digitalizados e gere PDFs pesquisáveis."),
+    ("💧", "Marca d'água", "Adicione marcas de texto ou imagem às páginas."),
+    ("🔢", "Numeração", "Insira números de página em posições configuráveis."),
+    ("🔐", "Proteção por senha", "Proteja o PDF com senha de abertura."),
 ]
 
 

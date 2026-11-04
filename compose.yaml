@@ -11,6 +11,10 @@ services:
       - "8501:8501"
     environment:
       TZ: America/Sao_Paulo
+      OCR_SERVICE_URL: http://ocr:8000
+    depends_on:
+      ocr:
+        condition: service_healthy
     read_only: false
     security_opt:
       - no-new-privileges:true
@@ -23,6 +27,36 @@ services:
       interval: 30s
       timeout: 5s
       start_period: 20s
+      retries: 3
+
+  # -------------------------------------------------------------------------
+  # Serviço de OCR (Indra OCR, IA em CPU) — container isolado para não
+  # disputar RAM com a interface. Os modelos (~76 MB) são baixados no build;
+  # o runtime não precisa de rede.
+  # -------------------------------------------------------------------------
+  ocr:
+    build:
+      context: .
+      dockerfile: services/ocr/Dockerfile
+    image: managerpdf-ocr:local
+    container_name: managerpdf-ocr
+    environment:
+      TZ: America/Sao_Paulo
+      INDRA_THREADS: "2"
+      INDRA_DPI: "200"
+    # Na VM alvo (4 GB): 2 threads ~650 MB de pico; o limite evita OOM.
+    mem_limit: 1g
+    cpus: 2.0
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=256m,mode=1777
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
       retries: 3
 
   # -------------------------------------------------------------------------
@@ -41,6 +75,10 @@ services:
       - "8502:8501"
     environment:
       TZ: America/Sao_Paulo
+      OCR_SERVICE_URL: http://ocr:8000
+    depends_on:
+      ocr:
+        condition: service_healthy
     command:
       - streamlit
       - run
