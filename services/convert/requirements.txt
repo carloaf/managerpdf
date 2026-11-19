@@ -1,0 +1,13 @@
+# Dependências do serviço de conversão (container separado do managerpdf).
+# Marker: conversão PDF → Markdown/HTML com IA em CPU (ONNX Runtime).
+marker-pdf==2.2.0
+
+# O Marker (via surya-ocr) exige torch/torchvision, mas o modo "fast" roda em
+# ONNX/CPU. Estes pins usam as rodas CPU (índice do PyTorch, ver Dockerfile),
+# evitando baixar os pacotes CUDA (~3 GB) que o PyPI entrega por padrão.
+torch==2.7.0+cpu
+torchvision==0.22.0+cpu
+
+# API HTTP que expõe a conversão para o container principal.
+fastapi>=0.111,<1
+uvicorn[standard]>=0.30,<1

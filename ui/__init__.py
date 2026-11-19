@@ -3,6 +3,7 @@
 __all__ = [
     "components",
     "compress_page",
+    "excel_page",
     "home",
     "image_page",
     "merge_page",
@@ -10,4 +11,5 @@ __all__ = [
     "rotate_page",
     "split_page",
     "theme",
+    "word_page",
 ]

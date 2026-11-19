@@ -7,3 +7,7 @@ pymupdf>=1.24.9,<1.26
 
 # Recompressão das imagens embutidas nos PDFs
 pillow>=10.4,<12
+
+# Extração de tabelas (PDF → Excel/Calc)
+openpyxl>=3.1,<4
+odfpy>=1.4,<2

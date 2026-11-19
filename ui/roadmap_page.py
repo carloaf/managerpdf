@@ -23,6 +23,12 @@ _PLANNED = [
         "Proteção por senha",
         "Aplicar senha de abertura (e permissões) ao PDF.",
     ),
+    (
+        "🧾",
+        "Tabelas escaneadas (RapidTable)",
+        "Extrair tabelas de PDFs digitalizados com o RapidTable/RapidLayout "
+        "(ONNX), complementando a detecção nativa do PyMuPDF.",
+    ),
 ]
 
 
@@ -46,6 +52,23 @@ def render() -> None:
             "- Páginas com camada de texto são preservadas; as digitalizadas "
             "recebem OCR e uma camada de texto invisível.\n"
             "- `src/ocr.py`: cliente HTTP + reconstrução do PDF pesquisável."
+        )
+
+    with st.container(border=True):
+        st.markdown(
+            "**PDF → Word (implementado ✅)**\n"
+            "- Motor: Marker (IA, ONNX Runtime, CPU) em um container separado "
+            "(`services/convert/`), seguido de pandoc para gerar o DOCX.\n"
+            "- `src/word.py`: cliente HTTP; o PDF é descriptografado localmente."
+        )
+
+    with st.container(border=True):
+        st.markdown(
+            "**PDF → Excel (implementado ✅)**\n"
+            "- Motor: `Page.find_tables()` do PyMuPDF (instantâneo, sem IA) para "
+            "PDFs digitais; gravação com openpyxl (XLSX) e odfpy (ODS).\n"
+            "- `src/excel.py`: extração + geração da planilha.\n"
+            "- Próximo passo: RapidTable (ONNX) para tabelas em PDFs escaneados."
         )
 
     with st.container(border=True):

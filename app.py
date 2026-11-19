@@ -13,6 +13,7 @@ import streamlit as st
 from src.storage import purge_temp_root
 from ui import (
     compress_page,
+    excel_page,
     home,
     image_page,
     merge_page,
@@ -21,6 +22,7 @@ from ui import (
     rotate_page,
     split_page,
     theme,
+    word_page,
 )
 
 st.set_page_config(
@@ -43,6 +45,8 @@ pages = {
         st.Page(rotate_page.render, title="Rotacionar PDF", icon="🔄", url_path="rotacionar"),
         st.Page(compress_page.render, title="Comprimir PDF", icon="🗜️", url_path="comprimir"),
         st.Page(image_page.render, title="PDF para imagem", icon="🖼️", url_path="imagens"),
+        st.Page(word_page.render, title="PDF para Word", icon="📄", url_path="word"),
+        st.Page(excel_page.render, title="PDF para Excel", icon="📊", url_path="excel"),
         st.Page(ocr_page.render, title="OCR (IA)", icon="🔍", url_path="ocr"),
     ],
     "Em breve": [

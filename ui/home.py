@@ -12,6 +12,8 @@ _TOOLS = [
     ("🔄", "Rotacionar PDF", "Gire todas as páginas ou apenas as selecionadas em 90°, 180° ou 270°.", "/rotacionar"),
     ("🗜️", "Comprimir PDF", "Reduza o tamanho recompactando imagens e a estrutura do arquivo.", "/comprimir"),
     ("🖼️", "PDF para imagem", "Exporte cada página como JPG/PNG e receba tudo em um ZIP.", "/imagens"),
+    ("📄", "PDF para Word", "Converta o PDF em um documento DOCX editável com IA local (Marker).", "/word"),
+    ("📊", "PDF para Excel", "Extraia as tabelas do PDF para uma planilha XLSX ou ODS.", "/excel"),
     ("🔍", "OCR (IA)", "Gere um PDF pesquisável a partir de documentos digitalizados com o Indra OCR.", "/ocr"),
 ]
 

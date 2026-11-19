@@ -20,7 +20,7 @@ down: ## Para e remove os containers
 restart: down up ## Reinicia a aplicação
 
 logs: ## Acompanha os logs
-	$(COMPOSE) logs -f managerpdf ocr
+	$(COMPOSE) logs -f managerpdf ocr convert
 
 ps: ## Mostra o status dos containers
 	$(COMPOSE) ps

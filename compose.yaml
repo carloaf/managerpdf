@@ -12,8 +12,11 @@ services:
     environment:
       TZ: America/Sao_Paulo
       OCR_SERVICE_URL: http://ocr:8000
+      CONVERT_SERVICE_URL: http://convert:8000
     depends_on:
       ocr:
+        condition: service_healthy
+      convert:
         condition: service_healthy
     read_only: false
     security_opt:
@@ -60,6 +63,36 @@ services:
       retries: 3
 
   # -------------------------------------------------------------------------
+  # Serviço de conversão PDF → Word (Marker, IA em CPU) — container isolado.
+  # O pipeline Marker (modo fast, Indra ONNX) + pandoc gera o DOCX. Os modelos
+  # (~76 MB) e a fonte do Marker são baixados no build; runtime sem rede.
+  # -------------------------------------------------------------------------
+  convert:
+    build:
+      context: .
+      dockerfile: services/convert/Dockerfile
+    image: managerpdf-convert:local
+    container_name: managerpdf-convert
+    environment:
+      TZ: America/Sao_Paulo
+      INDRA_THREADS: "2"
+    # Na VM alvo (4 GB): Marker em CPU + pandoc ~0,75 GB de pico medido (30 págs);
+    # o limite protege contra OOM em documentos maiores.
+    mem_limit: 2g
+    cpus: 3.0
+    security_opt:
+      - no-new-privileges:true
+    tmpfs:
+      - /tmp:size=512m,mode=1777
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8000/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      start_period: 120s
+      retries: 5
+
+  # -------------------------------------------------------------------------
   # Modo desenvolvimento (hot reload) — opcional:
   #   docker compose --profile dev up --build
   # Monta o código do host, mas as dependências continuam dentro do container.
@@ -76,8 +109,11 @@ services:
     environment:
       TZ: America/Sao_Paulo
       OCR_SERVICE_URL: http://ocr:8000
+      CONVERT_SERVICE_URL: http://convert:8000
     depends_on:
       ocr:
+        condition: service_healthy
+      convert:
         condition: service_healthy
     command:
       - streamlit

@@ -15,6 +15,8 @@ dependências e configurações vivem dentro do container.
 | 🔄 Rotacionar PDF | ✅ | 90° / 180° / 270°, todas as páginas ou seleção, pré-visualização |
 | 🗜️ Comprimir PDF | ✅ | Recompressão de imagens (qualidade + DPI + escala de cinza) e limpeza estrutural |
 | 🖼️ PDF → imagem | ✅ | JPG/PNG com DPI ajustável, páginas selecionáveis e resultado em ZIP |
+| 📄 PDF → Word | ✅ | DOCX editável via Marker (IA em CPU) + pandoc em container separado |
+| 📊 PDF → Excel | ✅ | Tabelas extraídas com PyMuPDF → XLSX/ODS (uma aba por tabela + resumo) |
 | 🔍 OCR (IA) | ✅ | PDF pesquisável via Indra OCR (ONNX Runtime) em container separado |
 
 Extras já implementados: detecção automática de **PDFs protegidos por senha**,
@@ -33,8 +35,9 @@ docker compose up --build
 
 Acesse **http://localhost:8501**.
 
-O comando sobe dois containers: `managerpdf` (interface Streamlit) e `ocr`
-(serviço Indra OCR). O build do `ocr` baixa os modelos de IA (~76 MB), então o
+O comando sobe três containers: `managerpdf` (interface Streamlit), `ocr`
+(serviço Indra OCR) e `convert` (serviço Marker → Word). O build do `ocr` e do
+`convert` baixa os modelos de IA (~76 MB cada) e a fonte do Marker, então o
 runtime não depende de rede.
 
 ## Deploy no servidor (VM em outro PC)
@@ -49,7 +52,7 @@ git clone <repo> managerpdf && cd managerpdf
 # 2. Construir e subir em background
 docker compose up -d --build
 
-# 3. Conferir a saúde dos dois containers (devem ficar "healthy")
+# 3. Conferir a saúde dos três containers (devem ficar "healthy")
 docker compose ps
 ```
 
@@ -64,15 +67,22 @@ sudo ufw allow 8501/tcp   # ou: sudo firewall-cmd --add-port=8501/tcp --permanen
 
 | Container | Limite | Observação |
 |---|---|---|
-| `ocr` | `mem_limit: 1g`, `cpus: 2.0`, 2 threads | pico medido ≈ 650 MB com 2 threads |
-| `managerpdf` | sem limite fixo | ≈ 300 MB ocioso; pico ~1 GB ao processar upload de 200 MB |
+| `ocr` | `mem_limit: 1g`, `cpus: 2.0`, 2 threads | ≈ 366 MB ocioso; pico ≈ 650 MB |
+| `convert` | `mem_limit: 2g`, `cpus: 3.0`, 2 threads | ≈ 280 MB ocioso; pico medido ≈ 740 MB (30 páginas) |
+| `managerpdf` | sem limite fixo | ≈ 36 MB ocioso; pico ~1 GB ao processar upload de 200 MB |
 
-- **Total em regime ≈ 1,3 GB; pico ≈ 2,2 GB** → cabe nos 4 GB com folga.
-- O OCR é CPU-bound e roda bem com 2 threads; **não** aumente para 6 threads —
-  cada thread extra acrescenta ~150 MB de RAM sem ganho proporcional na VM.
+- **Total em regime ≈ 0,7 GB; pico ≈ 2 GB** → cabe nos 4 GB, mesmo com as três
+  ferramentas em uso simultâneo.
+- OCR e Marker são CPU-bound e rodam bem com 2 threads (configuradas por
+  `INDRA_THREADS`); **não** aumente as threads — cada thread extra acrescenta
+  ~150 MB de RAM sem ganho proporcional na VM.
 - Em CPUs **sem AVX2** (máquinas antigas), o ONNX Runtime usa um caminho lento:
-  o OCR pode levar vários segundos por página. Em CPU moderna (a VM de 6 vCPU)
-  o esperado é ~210–400 ms/página.
+  o OCR/conversão pode levar vários segundos por página. Em CPU moderna o
+  esperado é ~210–400 ms/página no OCR.
+- A primeira conversão inclui o carregamento dos modelos (≈ 15–40 s); as
+  seguintes ficam em poucos segundos por página.
+- Um documento de até **200 páginas** é aceito na conversão para Word; acima
+  disso, divida o PDF antes (proteção de memória do container).
 
 ### Atualizar a aplicação na VM
 
@@ -85,9 +95,10 @@ docker compose up -d --build   # reconstrói e recria o que mudou
 ### Comandos úteis
 
 ```bash
-docker compose logs -f managerpdf ocr   # acompanha os dois serviços
-docker compose ps                       # status + health
-curl -fsS http://localhost:8000/health  # saúde do serviço OCR (dentro da VM)
+docker compose logs -f managerpdf ocr convert   # acompanha os três serviços
+docker compose ps                                # status + health
+docker compose exec ocr curl -fsS http://localhost:8000/health     # saúde do OCR
+docker compose exec convert curl -fsS http://localhost:8000/health # saúde do convert
 ```
 
 ### Atalhos com Make
@@ -124,6 +135,8 @@ managerpdf/
 │   ├── rotate_page.py      # rotacionar PDF (com prévia)
 │   ├── compress_page.py    # comprimir PDF (com relatório)
 │   ├── image_page.py       # PDF → imagem (JPG/PNG em ZIP)
+│   ├── word_page.py        # PDF → Word (DOCX via serviço Marker)
+│   ├── excel_page.py       # PDF → Excel/Calc (XLSX/ODS)
 │   ├── ocr_page.py         # OCR (PDF pesquisável)
 │   └── roadmap_page.py     # funcionalidades planejadas
 ├── src/                    # núcleo de processamento (sem Streamlit)
@@ -133,12 +146,18 @@ managerpdf/
 │   ├── rotate.py           # rotate_pdf()
 │   ├── compress.py         # compress_pdf() + CompressionReport
 │   ├── to_image.py         # iter_page_images() (PNG/JPG)
+│   ├── word.py             # cliente do serviço Marker (PDF → DOCX)
+│   ├── excel.py            # extração de tabelas + XLSX/ODS (openpyxl/odfpy)
 │   ├── ocr.py              # cliente do serviço OCR + PDF pesquisável
 │   ├── archive.py          # ZIP em memória
 │   ├── preview.py          # renderização de páginas em PNG
 │   └── storage.py          # workspace temporário + limpeza de /tmp
 ├── services/               # serviços auxiliares em containers próprios
-│   └── ocr/                # serviço OCR isolado (Indra OCR + FastAPI)
+│   ├── ocr/                # serviço OCR isolado (Indra OCR + FastAPI)
+│   │   ├── Dockerfile
+│   │   ├── app.py
+│   │   └── requirements.txt
+│   └── convert/            # serviço PDF → Word (Marker + pandoc + FastAPI)
 │       ├── Dockerfile
 │       ├── app.py
 │       └── requirements.txt
@@ -185,6 +204,21 @@ um PDF pesquisável sem alterar a aparência. Páginas que já possuem camada de
 texto são mantidas como estão. O serviço usa 2 threads (pico ~650 MB de RAM) e
 tem `mem_limit` de 1 GB no compose.
 
+**PDF → Word:** a conversão usa o [Marker](https://github.com/datalab-to/marker)
+(Apache 2.0, modo `fast` em CPU, Indra ONNX) em um container separado
+(`convert`), seguido do `pandoc` para transformar o HTML do Marker em DOCX —
+assim tabelas e fórmulas se tornam elementos nativos do Word. O `src/word.py`
+descriptografa o PDF localmente e envia os bytes ao serviço, que devolve o
+DOCX pronto. Os modelos e a fonte de renderização do Marker são baixados no
+build, mantendo o runtime sem rede. O Marker declara `torch` como dependência,
+mas o build instala apenas as rodas **CPU** (`+cpu`), sem os pacotes CUDA.
+
+**PDF → Excel:** a extração usa `Page.find_tables()` do PyMuPDF (instantâneo,
+sem IA) sobre o texto já embutido no PDF e grava a planilha com `openpyxl`
+(XLSX) ou `odfpy` (ODS), com uma aba por tabela e uma aba de resumo. PDFs
+escaneados sem camada de texto devem passar antes pela ferramenta de OCR; a
+extração de tabelas em digitalizados (RapidTable/RapidLayout) está planejada.
+
 ## Comportamento da compressão
 
 1. Cada imagem é reescalada para a resolução escolhida (DPI) e recodificada em
@@ -201,6 +235,8 @@ tem `mem_limit` de 1 GB no compose.
 - [ ] Testes automatizados do núcleo (`pytest`)
 - [ ] Marca d'água, numeração de páginas e proteção por senha
 - [ ] OCR: posicionamento exato do texto em páginas rotacionadas/verticais
+- [ ] Excel: tabelas de PDFs escaneados com RapidTable/RapidLayout (ONNX)
+- [ ] Word: suporte a `.doc` e ajuste fino de tabelas mescladas
 
 ## Licença
 

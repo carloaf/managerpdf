@@ -8,6 +8,7 @@ o que mantém o container leve e elimina a necessidade de limpeza manual.
 __all__ = [
     "archive",
     "compress",
+    "excel",
     "merge",
     "pdf_utils",
     "preview",
@@ -15,4 +16,5 @@ __all__ = [
     "split",
     "storage",
     "to_image",
+    "word",
 ]

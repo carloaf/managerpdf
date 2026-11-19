@@ -13,10 +13,13 @@ Funcionalidades Iniciais Necessárias:
 2. Dividir PDF (Split): O usuário faz upload de um PDF e escolhe um intervalo de páginas (ex: 1-3, 4-5) para extrair em novos arquivos.
 3. Rotacionar PDF: O usuário faz upload de um PDF, escolhe o ângulo (90, 180, 270 graus) e aplica a rotação a todas as páginas ou páginas selecionadas.
 4. Comprimir PDF: 
-
-Funcionalidade para mais tarde (apenas planejamento agora)
 5. Converter PDF para Imagem (JPG/PNG): O usuário envia um PDF e a aplicação gera um arquivo ZIP contendo as páginas convertidas em imagens.
 6. Servico de OCR. 
+
+Funcionalidade para mais tarde (apenas planejamento agora)
+7. Converter arquivos PDF para Word (DOCX, DOC): O usuário envia um PDF e a aplicação gera um arquivo DOCX correspondente.
+8. Converter arquivos PDF para Excel, Calc (XLSX, XLS, ODS): O usuário envia um PDF e a aplicação gera um arquivo XLSX, XLS, ODS correspondente.
+OBS.: Poderemos ajustar na VM a quantidade de recursos alocados para o container Docker, como CPU e memória, conforme a necessidade das operações de manipulação de PDFs.
 
 Regras de Código:
 - Escreva um código limpo, modular, bem documentado e dividida em módulos simples de fácil entendimento.
