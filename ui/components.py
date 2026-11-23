@@ -6,6 +6,7 @@ from typing import Any, Callable, Sequence, TypeVar
 
 import streamlit as st
 
+from src import stats
 from src.pdf_utils import (
     PDFPasswordError,
     PDFProcessingError,
@@ -178,6 +179,9 @@ def set_result(
         "filename": filename,
         "mime": mime,
     }
+    # Todo resultado exibido é um trabalho concluído: alimenta o contador da
+    # página inicial.
+    stats.register_job()
 
 
 def show_result(

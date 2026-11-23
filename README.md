@@ -21,8 +21,10 @@ dependências e configurações vivem dentro do container.
 
 Extras já implementados: detecção automática de **PDFs protegidos por senha**,
 validação de arquivos corrompidos, **processamento 100% em memória**,
-**exclusão dos uploads e do resultado assim que o download é concluído** e
-**cards clicáveis na página inicial** para abrir cada ferramenta.
+**exclusão dos uploads e do resultado assim que o download é concluído**,
+**cards clicáveis na página inicial** para abrir cada ferramenta e **contador
+de trabalhos realizados** (persistente entre reinícios) no topo da página
+inicial.
 
 ## Como rodar
 
@@ -151,6 +153,7 @@ managerpdf/
 │   ├── ocr.py              # cliente do serviço OCR + PDF pesquisável
 │   ├── archive.py          # ZIP em memória
 │   ├── preview.py          # renderização de páginas em PNG
+│   ├── stats.py            # contador persistente de trabalhos realizados
 │   └── storage.py          # workspace temporário + limpeza de /tmp
 ├── services/               # serviços auxiliares em containers próprios
 │   ├── ocr/                # serviço OCR isolado (Indra OCR + FastAPI)
@@ -185,6 +188,15 @@ futuros que exijam disco, como OCR, e `purge_temp_root()`, executado na
 inicialização, que remove sobras com mais de 6 horas. O `compose.yaml` ainda
 monta `/tmp` como `tmpfs` limitado a 256 MB, então um eventual vazamento nunca
 chega ao disco do host.
+
+**Contador de trabalhos:** `src/stats.py` mantém um total que começa em 114 e
+é incrementado por `components.set_result()` a cada resultado exibido, ou seja,
+uma vez por operação concluída com sucesso (reruns e descartes não contam). O
+valor vive em `/data/stats.json`, apontado por `STATS_PATH`, e o `compose.yaml`
+monta o volume nomeado `stats` nesse caminho — é o único dado persistido, já
+que os documentos continuam trafegando apenas em memória. Sem o volume (ou com
+o arquivo ilegível) o contador cai para memória e volta a 114 no próximo
+reinício.
 
 **Senhas:** `open_pdf()` verifica `needs_pass`, autentica quando necessário e
 levanta `PDFPasswordError`; a interface pede a senha e tenta novamente.

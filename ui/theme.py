@@ -48,6 +48,34 @@ _CSS = """
   }
   .mp-hero p { margin: 0; font-size: 0.98rem; opacity: 0.94; max-width: 62ch; }
 
+  /* Contador de trabalhos realizados */
+  .mp-stats {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    background: #fff;
+    border: 1px solid var(--mp-border);
+    border-radius: 16px;
+    padding: 0.85rem 1.2rem;
+    margin-bottom: 1.6rem;
+    box-shadow: 0 10px 24px -16px rgba(15, 23, 42, 0.38),
+                0 2px 6px rgba(15, 23, 42, 0.06);
+  }
+  .mp-stats .mp-stat-icon { font-size: 1.5rem; line-height: 1; }
+  .mp-stats .mp-stat-value {
+    display: block;
+    font-size: 1.55rem;
+    font-weight: 700;
+    line-height: 1.1;
+    color: var(--mp-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  .mp-stats .mp-stat-label {
+    display: block;
+    font-size: 0.8rem;
+    color: var(--mp-muted);
+  }
+
   /* Cartões */
   .mp-card {
     background: #fff;
@@ -171,6 +199,20 @@ def hero(icon: str, title: str, subtitle: str) -> None:
           <p>{subtitle}</p>
         </div>
         """,
+        unsafe_allow_html=True,
+    )
+
+
+def stat(icon: str, value: str, label: str) -> None:
+    """Faixa com um número em destaque (ex.: trabalhos realizados)."""
+    st.markdown(
+        f'<div class="mp-stats">'
+        f'<span class="mp-stat-icon">{icon}</span>'
+        f"<div>"
+        f'<span class="mp-stat-value">{value}</span>'
+        f'<span class="mp-stat-label">{label}</span>'
+        f"</div>"
+        f"</div>",
         unsafe_allow_html=True,
     )
 

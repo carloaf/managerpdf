@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import streamlit as st
 
+from src import stats
 from ui import theme
 
 _TOOLS = [
@@ -30,6 +31,12 @@ def render() -> None:
         "Todas as suas ferramentas de PDF, no seu computador",
         "Junte, divida, rotacione, comprima e converta arquivos em segundos. "
         "Tudo roda localmente e os arquivos nunca saem da sua máquina.",
+    )
+
+    theme.stat(
+        "✅",
+        f"{stats.total():,}".replace(",", "."),
+        "trabalhos realizados",
     )
 
     st.markdown("#### Ferramentas disponíveis")

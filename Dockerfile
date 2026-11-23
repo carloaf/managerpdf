@@ -37,8 +37,10 @@ COPY ui ./ui
 COPY .streamlit ./.streamlit
 
 # Executa como usuário sem privilégios
+# /data guarda apenas o contador de trabalhos (volume nomeado no compose).
 RUN useradd --create-home --uid 1000 appuser \
-    && chown -R appuser:appuser /app /home/appuser /tmp
+    && mkdir -p /data \
+    && chown -R appuser:appuser /app /home/appuser /tmp /data
 USER appuser
 
 EXPOSE 8501
