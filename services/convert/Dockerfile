@@ -42,7 +42,9 @@ snapshot_download(
     "datalab-to/indra-ocr",
     revision="v1.1.0",
     local_dir="/opt/indra-models",
-    allow_patterns=["*.onnx", "meta.json", "lm.npz", "lm_*.npz"],
+    # math_meta.json é exigido pelo motivo math do Marker; sem ele o predictor
+    # tenta baixar o modelo em runtime (e falha em máquina sem internet).
+    allow_patterns=["*.onnx", "meta.json", "math_meta.json", "lm.npz", "lm_*.npz"],
 )
 PY
 
